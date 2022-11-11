@@ -44,6 +44,8 @@ export class Player {
             console.log("Set 10 second timeout.");
 
             this.disconnectedTimeout = setTimeout(() => {
+                console.log(`Player ${this.username} timed out.`);
+
                 this.game.leave(this);
             }, 10000);
         });
@@ -82,7 +84,6 @@ export class Player {
             if (!this.game.isAdmin(this)) return;
 
             this.game.settings = event.settings;
-            console.log(this.game.settings);
 
             this.game.broadcastEvent(event);
         });
