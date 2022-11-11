@@ -10,13 +10,11 @@ export class ClientConnection extends EventSystem {
         socket.on("message", this.messageReceived.bind(this));
         socket.on("close", () => {
             this.connected = false;
-            this.messageReceived(Buffer.from('{"name":"DisconnectedEvent"}'));
+            this.parse('{"name":"DisconnectedEvent"}');
         });
     }
 
     send(event: BaseEvent) {
-        console.log(event);
-
         this.socket.send(event.stringify());
     }
 
