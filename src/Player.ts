@@ -1,15 +1,16 @@
+import {
+    Card,
+    CardPlacedEvent,
+    CardRequestEvent,
+    DisconnectedEvent,
+    GameStartEvent,
+    getGameMode,
+    SettingsChangedEvent,
+    UpdateDeckEvent,
+} from "@lebogo/onu2-shared";
 import { createHash, randomUUID } from "crypto";
-import { Card } from "../../OnuShared/src/Card";
-import { getGameMode } from "../../OnuShared/src/GameMode";
 import { CardGenerator } from "./CardGenerator";
 import { ClientConnection } from "./ClientConnection";
-
-import { CardPlacedEvent } from "../../OnuShared/src/events/CardPlacedEvent";
-import { CardRequestEvent } from "../../OnuShared/src/events/CardRequestEvent";
-import { DisconnectedEvent } from "../../OnuShared/src/events/DisconnectedEvent";
-import { SettingsChangedEvent } from "../../OnuShared/src/events/SettingsChangedEvent";
-import { UpdateDeckEvent } from "../../OnuShared/src/events/UpdateDeckEvent";
-import { GameStartEvent } from "../../OnuShared/src/events/GameStartEvent";
 
 import { Game } from "./Game";
 
@@ -72,7 +73,7 @@ export class Player {
             if (!validTurn) return;
             this.game!.topCard = deckCard;
             this.deck = this.deck.filter((card) => card.id != deckCard.id);
-            this.game!.broadcastEvent(new CardPlacedEvent(event.card, this.hash));
+            this.game!.broadcastEvent(new CardPlacedEvent(event.card));
 
             this.game.nextPlayer(1);
         });

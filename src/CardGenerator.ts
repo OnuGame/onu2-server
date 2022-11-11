@@ -1,5 +1,4 @@
-import { Card, CardColor, CardColorType, CardType } from "../../OnuShared/src/Card";
-import { GameMode } from "../../OnuShared/src/GameMode";
+import { Card, CardColor, CardColorType, CardType, GameMode } from "@lebogo/onu2-shared";
 
 export class CardGenerator {
     constructor(public mode: GameMode) {}

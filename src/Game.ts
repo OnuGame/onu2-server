@@ -1,13 +1,16 @@
-import { Card, CardColor } from "../../OnuShared/src/Card";
-import { GameStartEvent } from "../../OnuShared/src/events/GameStartEvent";
-import { JoinedLobbyEvent } from "../../OnuShared/src/events/JoinedLobbyEvent";
-import { OnuEvent } from "../../OnuShared/src/events/OnuEvent";
-import { SettingsChangedEvent } from "../../OnuShared/src/events/SettingsChangedEvent";
-import { UpdateDeckEvent } from "../../OnuShared/src/events/UpdateDeckEvent";
-import { UpdatePlayerlistEvent } from "../../OnuShared/src/events/UpdatePlayerlistEvent";
-import { getGameMode } from "../../OnuShared/src/GameMode";
-import { OnuSettings } from "../../OnuShared/src/OnuSettings";
-import { PlayerlistPlayer } from "../../OnuShared/src/PlayerlistPlayer";
+import { BaseEvent } from "@lebogo/eventsystem";
+import {
+    Card,
+    CardColor,
+    GameStartEvent,
+    getGameMode,
+    JoinedLobbyEvent,
+    OnuSettings,
+    PlayerlistPlayer,
+    SettingsChangedEvent,
+    UpdateDeckEvent,
+    UpdatePlayerlistEvent,
+} from "@lebogo/onu2-shared";
 import { CardGenerator } from "./CardGenerator";
 import { ClientConnection } from "./ClientConnection";
 import { Player } from "./Player";
@@ -85,7 +88,7 @@ export class Game {
         }
     }
 
-    broadcastEvent(event: OnuEvent) {
+    broadcastEvent(event: BaseEvent) {
         this.players.forEach((player) => {
             player.connection.send(event);
         });

@@ -1,7 +1,6 @@
+import { JoinLobbyEvent, ReconnectEvent } from "@lebogo/onu2-shared";
 import express from "express";
 import { Server } from "ws";
-import { JoinLobbyEvent } from "../../OnuShared/src/events/JoinLobbyEvent";
-import { ReconnectEvent } from "../../OnuShared/src/events/ReconnectEvent";
 import { ClientConnection } from "./ClientConnection";
 import { Game } from "./Game";
 
