@@ -22,6 +22,14 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "LeBogo",
-  "license": "ISC",
-  "description": ""
+  "license": "CC BY-NC-SA 4.0",
+  "description": "The Official server software for the Onu2 Project",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OnuGame/onu2-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/OnuGame/onu2-server/issues"
+  },
+  "homepage": "https://github.com/OnuGame/onu2-server#readme"
 }
