@@ -36,18 +36,11 @@ export class Player {
 
     registerEvents() {
         this.connection.registerEvent<DisconnectedEvent>("DisconnectedEvent", () => {
-            // this.game.leave(this);
-            console.log("Updated playerlist");
+            console.log(`Player ${this.username} disconnected`);
 
             this.game.broadcastPlayerlist();
 
-            console.log("Set 10 second timeout.");
-
-            this.disconnectedTimeout = setTimeout(() => {
-                console.log(`Player ${this.username} timed out.`);
-
-                this.game.leave(this);
-            }, 10000);
+            this.game.leave(this);
         });
 
         this.connection.registerEvent<CardRequestEvent>("CardRequestEvent", (event) => {
