@@ -1,4 +1,4 @@
-import { BaseEvent } from "@lebogo/eventsystem";
+import { BaseEvent, EventSystem } from "@lebogo/eventsystem";
 import {
     Card,
     CardColor,
@@ -6,6 +6,8 @@ import {
     getGameMode,
     JoinedLobbyEvent,
     OnuSettings,
+    PlayerJoinedEvent,
+    PlayerLeftEvent,
     PlayerlistPlayer,
     SettingsChangedEvent,
     UpdateDeckEvent,
@@ -15,7 +17,7 @@ import { CardGenerator } from "./CardGenerator";
 import { ClientConnection } from "./ClientConnection";
 import { Player } from "./Player";
 
-export class Game {
+export class Game extends EventSystem {
     players: Player[] = [];
     lobbyPlayerlist: Player[] = [];
     activePlayer: number = -1;
@@ -33,7 +35,9 @@ export class Game {
             defaults: ["Special", "Classic"],
         },
     };
-    constructor(public lobbyCode: string) {}
+    constructor(public lobbyCode: string) {
+        super();
+    }
 
     join(username: string, connection: ClientConnection) {
         const player = new Player(this, connection, username);
@@ -41,8 +45,18 @@ export class Game {
         this.players.push(player);
         connection.send(new JoinedLobbyEvent(player.uuid, player.hash));
 
+        // Send current settings to the new player
+        connection.send(new SettingsChangedEvent(this.settings));
+
+        // Update playerlist for all clients
+        // TODO: This may be redundant because of the playerleft event.
+        // This needs to be fixed on the client side.
         this.broadcastPlayerlist();
-        player.connection.send(new SettingsChangedEvent(this.settings));
+
+        // Send playerjoined event to all clients and internally
+        const playerJoinedEvent = new PlayerJoinedEvent(username, player.uuid);
+        this.broadcastEvent(playerJoinedEvent);
+        this.emit(playerJoinedEvent);
     }
 
     broadcastPlayerlist() {
@@ -59,7 +73,16 @@ export class Game {
 
     leave(leftPlayer: Player) {
         this.players = this.players.filter((player) => player.username != leftPlayer.username);
+
+        // Update playerlist for all clients
+        // TODO: This may be redundant because of the playerleft event.
+        // This needs to be fixed on the client side.
         this.broadcastPlayerlist();
+
+        // Send playerleft event to all clients and internally
+        const playerLeftEvent = new PlayerLeftEvent(leftPlayer.uuid);
+        this.broadcastEvent(playerLeftEvent);
+        this.emit(playerLeftEvent);
     }
 
     isAdmin(player: Player): boolean {

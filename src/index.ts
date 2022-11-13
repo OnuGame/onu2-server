@@ -1,4 +1,4 @@
-import { JoinLobbyEvent, ReconnectEvent } from "@lebogo/onu2-shared";
+import { JoinLobbyEvent, PlayerLeftEvent, ReconnectEvent } from "@lebogo/onu2-shared";
 import express from "express";
 import { Server } from "ws";
 import { ClientConnection } from "./ClientConnection";
@@ -12,15 +12,23 @@ const wsServer = new Server({ noServer: true });
 
 wsServer.on("connection", (socket) => {
     const connection = new ClientConnection(socket);
+    let game: Game | undefined;
 
     console.log("New connection");
 
     connection.registerEvent<JoinLobbyEvent>("JoinLobbyEvent", ({ username, lobbyCode }) => {
-        let game = games.get(lobbyCode);
+        game = games.get(lobbyCode);
         if (!game) {
             console.log(`Creating game ${lobbyCode}`);
             game = new Game(lobbyCode);
             games.set(lobbyCode, game);
+
+            game.registerEvent<PlayerLeftEvent>("PlayerLeftEvent", (event) => {
+                if (game?.players.length === 0) {
+                    console.log(`Deleting game ${lobbyCode}`);
+                    games.delete(lobbyCode);
+                }
+            });
         }
 
         console.log(`Adding Player ${username} to ${lobbyCode}`);
@@ -28,7 +36,6 @@ wsServer.on("connection", (socket) => {
     });
 
     connection.registerEvent<ReconnectEvent>("ReconnectEvent", ({ lobbyCode, uuid }) => {
-        let game = games.get(lobbyCode);
         if (!game) return;
         let player = game.players.find((player) => player.uuid == uuid);
         if (!player) return;
