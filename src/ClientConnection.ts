@@ -29,7 +29,7 @@ export class ClientConnection extends EventSystem {
             }
             this.lastPing = Date.now();
             this.send(new PingEvent(this.lastPing));
-        }, 5000);
+        }, 10000);
 
         this.registerEvent("PingEvent", (event: PingEvent) => {
             // ping received. reset last ping.
