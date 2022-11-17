@@ -38,7 +38,7 @@ export class Game extends EventSystem {
         gameMode: {
             name: "Gamemode",
             value: "Classic",
-            defaults: ["Special", "Classic"],
+            defaults: ["Classic", "Lite", "Special"],
         },
     };
     constructor(public lobbyCode: string) {
