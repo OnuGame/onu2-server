@@ -14,6 +14,7 @@ import {
     PlayerJoinedEvent,
     PlayerLeftEvent,
     PlayerlistPlayer,
+    PlayerTurnEvent,
     SettingsChangedEvent,
     UpdateDeckEvent,
     UpdatePlayerlistEvent,
@@ -102,14 +103,16 @@ export class Game extends EventSystem {
 
         this.activePlayer = 0;
 
+        this.broadcastEvent(new GameStartEvent());
+
         for (let player of this.players) {
             const cards = this.cardGenerator.generate(
                 parseInt(this.settings.cardAmount.value || "7")
             );
-            player.deck.push(...cards);
-            player.connection.send(new GameStartEvent());
+            player.deck = cards;
             player.connection.send(new UpdateDeckEvent(player.deck));
         }
+        this.broadcastEvent(new PlayerTurnEvent(this.players[this.activePlayer].uuid));
     }
 
     nextPlayer(skip: number = 1) {
@@ -123,6 +126,8 @@ export class Game extends EventSystem {
                 this.activePlayer = 0;
             }
         }
+
+        this.broadcastEvent(new PlayerTurnEvent(this.players[this.activePlayer].uuid));
     }
 
     isPlayersTurn(player: Player): boolean {
