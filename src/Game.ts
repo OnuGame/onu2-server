@@ -2,6 +2,7 @@ import { BaseEvent, EventSystem } from "@lebogo/eventsystem";
 import {
     Card,
     CardColor,
+    CardColorType,
     CardPlacedEvent,
     CardRequestEvent,
     ColorWishEvent,
@@ -26,7 +27,7 @@ export class Game extends EventSystem {
     lobbyPlayerlist: Player[] = [];
     activePlayer: number = -1;
     topCard: Card = new Card("w", new CardColor("c"));
-    drawAmount: number = 0;
+    drawAmount: number = 1;
     cardGenerator?: CardGenerator;
     settings: OnuSettings = {
         cardAmount: {
@@ -112,11 +113,15 @@ export class Game extends EventSystem {
     }
 
     nextPlayer(skip: number = 1) {
-        this.activePlayer += skip;
-        if (this.activePlayer >= this.players.length) {
-            console.log(this.players.length - this.activePlayer);
+        while (skip != 0) {
+            this.activePlayer++;
+            skip--;
 
-            this.activePlayer = 0;
+            if (this.activePlayer >= this.players.length) {
+                console.log(this.players.length - this.activePlayer);
+
+                this.activePlayer = 0;
+            }
         }
     }
 
@@ -139,19 +144,45 @@ export class Game extends EventSystem {
         this.nextPlayer(1);
     }
 
-    placeCard(card: Card, player: Player) {
+    colorWished(player: Player, color?: CardColorType) {
+        // If no color was specified, the next player can choose the color
+        if (!color) return this.nextPlayer(1);
+
+        console.log("Color wished: " + color);
         if (!this.isPlayersTurn(player)) return;
+
+        this.topCard.color.color = color;
+
+        // Update top card of all players
+        this.broadcastEvent(new CardPlacedEvent(this.topCard));
+
+        // Increment player since the player who wished the color is done.
+        this.nextPlayer(1);
+    }
+
+    placeCard(card: Card, player: Player) {
+        console.log();
+        console.log(`Placing player: ${player.username}`);
+        console.log("Placing card: " + card.color.color + " " + card.type);
+        console.log("----------------------");
+        console.log(`Current drawAmount: ${this.drawAmount}`);
+        console.log(`Current topCard: ${this.topCard.type} ${this.topCard.color.color}`);
+        console.log(`Current activePlayer: ${this.players[this.activePlayer].username}`);
+        console.log();
+
+        if (!this.isPlayersTurn(player)) return console.log("Not players turn");
 
         // Check if the card is in the players deck
         const deckCard = player.deck.find((deckCard) => deckCard.id == card.id);
-        if (!deckCard) return;
+        if (!deckCard) return console.log("Card not in deck");
 
         // Check if the played card is valid
         const validTurn = this.topCard.compare(card);
-        if (!validTurn) return;
+        if (!validTurn) return console.log("Invalid turn");
 
         // Check if the player has to draw cards and can't play a draw card
-        if (this.drawAmount > 0 && !(card.type == "p2" || card.type == "p4")) return;
+        if (this.drawAmount > 1 && !(card.type == "p2" || card.type == "p4"))
+            return console.log("Player has to draw cards");
 
         this.topCard = deckCard;
 
@@ -169,11 +200,10 @@ export class Game extends EventSystem {
 
         // Handle special cards
         switch (deckCard.type) {
-            case "w":
-            case "p4":
-                player.connection.send(new ColorWishEvent());
             case "p4":
                 this.drawAmount += 4;
+            case "w":
+                player.connection.send(new ColorWishEvent());
                 // Don't skip the player. Only skip after the player has chosen a color.
                 return;
 

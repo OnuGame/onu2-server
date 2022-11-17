@@ -2,6 +2,7 @@ import {
     Card,
     CardPlacedEvent,
     CardRequestEvent,
+    ColorWishEvent,
     DisconnectedEvent,
     GameStartEvent,
     SettingsChangedEvent,
@@ -42,6 +43,10 @@ export class Player {
 
         this.connection.registerEvent<CardRequestEvent>("CardRequestEvent", (event) => {
             this.game.drawCards(this);
+        });
+
+        this.connection.registerEvent<ColorWishEvent>("ColorWishEvent", (event) => {
+            this.game.colorWished(this, event.color);
         });
 
         this.connection.registerEvent<CardPlacedEvent>("CardPlacedEvent", (event) => {
