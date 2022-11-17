@@ -4,12 +4,9 @@ import {
     CardRequestEvent,
     DisconnectedEvent,
     GameStartEvent,
-    getGameMode,
     SettingsChangedEvent,
-    UpdateDeckEvent,
 } from "@lebogo/onu2-shared";
 import { createHash, randomUUID } from "crypto";
-import { CardGenerator } from "./CardGenerator";
 import { ClientConnection } from "./ClientConnection";
 
 import { Game } from "./Game";
@@ -44,33 +41,11 @@ export class Player {
         });
 
         this.connection.registerEvent<CardRequestEvent>("CardRequestEvent", (event) => {
-            let amount = 1;
-            if (this.game.drawAmount != 0) amount = this.game.drawAmount;
-
-            const cardGenerator = new CardGenerator(
-                getGameMode(this.game.settings.gameMode.value || "classic")
-            );
-            const cards = cardGenerator.generate(amount);
-            amount = 0;
-            this.deck.push(...cards);
-            this.connection.send(new UpdateDeckEvent(this.deck));
+            this.game.drawCards(this);
         });
 
         this.connection.registerEvent<CardPlacedEvent>("CardPlacedEvent", (event) => {
-            const playerId = this.game!.players.indexOf(this);
-            if (playerId != this.game!.activePlayer) return;
-
-            const deckCard = this.deck.find((deckCard) => deckCard.id == event.card.id);
-
-            if (!deckCard) return;
-
-            const validTurn = this.game!.topCard.compare(event.card);
-            if (!validTurn) return;
-            this.game!.topCard = deckCard;
-            this.deck = this.deck.filter((card) => card.id != deckCard.id);
-            this.game!.broadcastEvent(new CardPlacedEvent(event.card));
-
-            this.game.nextPlayer(1);
+            this.game.placeCard(event.card, this);
         });
 
         this.connection.registerEvent<SettingsChangedEvent>("SettingsChangedEvent", (event) => {
