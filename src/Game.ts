@@ -135,6 +135,8 @@ export class Game extends EventSystem {
         player.connection.send(new CardRequestEvent());
         // Update the deck for this player
         player.connection.send(new UpdateDeckEvent(player.deck));
+
+        this.nextPlayer(1);
     }
 
     placeCard(card: Card, player: Player) {
