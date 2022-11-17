@@ -16,7 +16,7 @@ export class ClientConnection extends EventSystem {
             console.log("Connection closed");
 
             this.connected = false;
-            this.close();
+            this.parse('{"name":"DisconnectedEvent"}');
         });
 
         this.pingInterval = setInterval(() => {
@@ -25,30 +25,20 @@ export class ClientConnection extends EventSystem {
                 clearInterval(this.pingInterval);
                 this.connected = false;
                 socket.close();
-                this.parse('{"n":"Disconnected"}');
+                this.parse('{"name":"DisconnectedEvent"}');
             }
-            this.lastPing = Math.floor(Math.random() * 100) + 1;
+            this.lastPing = Date.now();
             this.send(new PingEvent(this.lastPing));
         }, 10000);
 
-        this.registerEvent("Ping", (event: PingEvent) => {
+        this.registerEvent("PingEvent", (event: PingEvent) => {
             // ping received. reset last ping.
-            if (event.ping == this.lastPing) this.lastPing = -1;
-            else this.close();
+            this.lastPing = -1;
         });
     }
 
-    close() {
-        this.parse('{"n":"Disconnected"}');
-        this.socket.close();
-    }
-
     send(event: BaseEvent) {
-        // replace name field with n to save some bytes
-        let json: { [key: string]: any } = { n: event.name, ...event };
-        delete json.name;
-
-        this.socket.send(JSON.stringify(json));
+        this.socket.send(event.stringify());
     }
 
     private messageReceived(message: Buffer) {
