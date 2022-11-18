@@ -113,6 +113,8 @@ export class Game extends EventSystem {
             player.connection.send(new UpdateDeckEvent(player.deck));
         }
         this.broadcastEvent(new PlayerTurnEvent(this.players[this.activePlayer].uuid));
+
+        this.broadcastEvent(new CardPlacedEvent(this.cardGenerator.generate(1)[0]));
     }
 
     nextPlayer(skip: number = 1) {
