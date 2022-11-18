@@ -17,6 +17,7 @@ import {
     PlayerTurnEvent,
     SettingsChangedEvent,
     UpdateDeckEvent,
+    UpdateDrawAmountEvent,
     UpdatePlayerlistEvent,
 } from "@lebogo/onu2-shared";
 import { CardGenerator } from "./CardGenerator";
@@ -44,6 +45,15 @@ export class Game extends EventSystem {
     };
     constructor(public lobbyCode: string) {
         super();
+    }
+
+    addDrawAmount(amount: number) {
+        this.drawAmount = (this.drawAmount == 1 ? 0 : this.drawAmount) + amount;
+        this.broadcastEvent(new UpdateDrawAmountEvent(this.drawAmount));
+    }
+
+    resetDrawAmount() {
+        this.drawAmount = 1;
     }
 
     join(username: string, connection: ClientConnection) {
@@ -138,7 +148,8 @@ export class Game extends EventSystem {
         if (!this.isPlayersTurn(player)) return;
 
         const cards = this.cardGenerator!.generate(this.drawAmount);
-        this.drawAmount = 1;
+        this.resetDrawAmount();
+        this.broadcastEvent(new UpdateDrawAmountEvent(this.drawAmount));
         player.deck.push(...cards);
 
         // Respond to the player -> play animation
@@ -196,7 +207,7 @@ export class Game extends EventSystem {
         // Handle special cards
         switch (deckCard.type) {
             case "p4":
-                this.drawAmount += 4;
+                this.addDrawAmount(4);
             case "w":
                 player.wishing = true;
                 player.connection.send(new ColorWishEvent());
@@ -204,7 +215,7 @@ export class Game extends EventSystem {
                 return;
 
             case "p2": // Add 2 to the draw amount
-                this.drawAmount += 2;
+                this.addDrawAmount(2);
                 break;
 
             case "sk": // Skip next player -> advance twice
