@@ -123,8 +123,6 @@ export class Game extends EventSystem {
             skip--;
 
             if (this.activePlayer >= this.players.length) {
-                console.log(this.players.length - this.activePlayer);
-
                 this.activePlayer = 0;
             }
         }
@@ -152,10 +150,11 @@ export class Game extends EventSystem {
     }
 
     colorWished(player: Player, color?: CardColorType) {
+        player.wishing = false;
+
         // If no color was specified, the next player can choose the color
         if (!color) return this.nextPlayer(1);
 
-        console.log("Color wished: " + color);
         if (!this.isPlayersTurn(player)) return;
 
         this.topCard.color.color = color;
@@ -168,36 +167,25 @@ export class Game extends EventSystem {
     }
 
     placeCard(card: Card, player: Player) {
-        console.log();
-        console.log(`Placing player: ${player.username}`);
-        console.log("Placing card: " + card.color.color + " " + card.type);
-        console.log("----------------------");
-        console.log(`Current drawAmount: ${this.drawAmount}`);
-        console.log(`Current topCard: ${this.topCard.type} ${this.topCard.color.color}`);
-        console.log(`Current activePlayer: ${this.players[this.activePlayer].username}`);
-        console.log();
-
-        if (!this.isPlayersTurn(player)) return console.log("Not players turn");
+        if (player.wishing) return;
+        if (!this.isPlayersTurn(player)) return;
 
         // Check if the card is in the players deck
         const deckCard = player.deck.find((deckCard) => deckCard.id == card.id);
-        if (!deckCard) return console.log("Card not in deck");
+        if (!deckCard) return;
 
         // Check if the played card is valid
         const validTurn = this.topCard.compare(card);
-        if (!validTurn) return console.log("Invalid turn");
+        if (!validTurn) return;
 
         // Check if the player has to draw cards and can't play a draw card
-        if (this.drawAmount > 1 && !(card.type == "p2" || card.type == "p4"))
-            return console.log("Player has to draw cards");
+        if (this.drawAmount > 1 && !(card.type == "p2" || card.type == "p4")) return;
 
         this.topCard = deckCard;
 
         // Remove the card from the players deck
         player.deck = player.deck.filter((card) => card.id != deckCard.id);
         this.broadcastEvent(new CardPlacedEvent(deckCard));
-
-        console.log(deckCard);
 
         // Check if the player has won
         if (player.deck.length == 0) {
@@ -210,6 +198,7 @@ export class Game extends EventSystem {
             case "p4":
                 this.drawAmount += 4;
             case "w":
+                player.wishing = true;
                 player.connection.send(new ColorWishEvent());
                 // Don't skip the player. Only skip after the player has chosen a color.
                 return;

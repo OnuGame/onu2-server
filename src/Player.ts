@@ -17,6 +17,7 @@ export class Player {
     hash: string;
     deck: Card[] = [];
     disconnectedTimeout: NodeJS.Timeout | undefined;
+    wishing: boolean = false;
 
     constructor(public game: Game, public connection: ClientConnection, public username: string) {
         this.hash = createHash("md5").update(this.uuid).digest("hex");
