@@ -23,6 +23,9 @@ wsServer.on("connection", (socket) => {
     console.log("New connection");
 
     connection.registerEvent<JoinLobbyEvent>("JoinLobbyEvent", ({ username, lobbyCode }) => {
+        if (!username.length) username = "Player" + Math.floor(Math.random() * 1000);
+        username = username.trim().substring(0, 20);
+
         game = games.get(lobbyCode);
         if (!game) {
             console.log(`Creating game ${lobbyCode}`);
