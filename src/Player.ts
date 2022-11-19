@@ -7,20 +7,18 @@ import {
     GameStartEvent,
     SettingsChangedEvent,
 } from "@lebogo/onu2-shared";
-import { createHash, randomUUID } from "crypto";
+import { randomUUID } from "crypto";
 import { ClientConnection } from "./ClientConnection";
 
 import { Game } from "./Game";
 
 export class Player {
     uuid: string = randomUUID();
-    hash: string;
     deck: Card[] = [];
     disconnectedTimeout: NodeJS.Timeout | undefined;
     wishing: boolean = false;
 
     constructor(public game: Game, public connection: ClientConnection, public username: string) {
-        this.hash = createHash("md5").update(this.uuid).digest("hex");
         this.registerEvents();
     }
 
@@ -55,6 +53,7 @@ export class Player {
         });
 
         this.connection.registerEvent<SettingsChangedEvent>("SettingsChangedEvent", (event) => {
+            if (this.game.started) return;
             if (!this.game.isAdmin(this)) return;
 
             this.game.settings = event.settings;
@@ -63,6 +62,7 @@ export class Player {
         });
 
         this.connection.registerEvent<GameStartEvent>("GameStartEvent", (event) => {
+            if (this.game.started) return;
             if (!this.game.isAdmin(this)) return;
 
             this.game.start();

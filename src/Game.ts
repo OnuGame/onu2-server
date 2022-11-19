@@ -6,6 +6,7 @@ import {
     CardPlacedEvent,
     CardRequestEvent,
     ColorWishEvent,
+    GameOverEvent,
     GameStartEvent,
     getGameMode,
     JoinedLobbyEvent,
@@ -16,6 +17,7 @@ import {
     PlayerlistPlayer,
     PlayerTurnEvent,
     SettingsChangedEvent,
+    UpdateAdminEvent,
     UpdateDeckEvent,
     UpdateDrawAmountEvent,
     UpdatePlayerlistEvent,
@@ -26,11 +28,14 @@ import { Player } from "./Player";
 
 export class Game extends EventSystem {
     players: Player[] = [];
+    spectators: Player[] = [];
     lobbyPlayerlist: Player[] = [];
     activePlayer: number = -1;
     topCard: Card = new Card("w", new CardColor("c"));
     drawAmount: number = 1;
     cardGenerator?: CardGenerator;
+    started: boolean = false;
+    admin: Player | undefined;
     settings: OnuSettings = {
         cardAmount: {
             name: "Card amount",
@@ -59,11 +64,14 @@ export class Game extends EventSystem {
     join(username: string, connection: ClientConnection) {
         const player = new Player(this, connection, username);
 
-        this.players.push(player);
-        connection.send(new JoinedLobbyEvent(player.uuid, player.hash));
+        if (!this.admin) this.admin = player;
 
-        // Send current settings to the new player
+        this.spectators.push(player);
+        connection.send(new JoinedLobbyEvent(player.uuid));
+
+        // Send current settings and the lobby admin to the new player
         connection.send(new SettingsChangedEvent(this.settings));
+        connection.send(new UpdateAdminEvent(this.admin.uuid));
 
         // Update playerlist for all clients
         // TODO: This may be redundant because of the playerleft event.
@@ -74,21 +82,46 @@ export class Game extends EventSystem {
         const playerJoinedEvent = new PlayerJoinedEvent(username, player.uuid);
         this.broadcastEvent(playerJoinedEvent);
         this.emit(playerJoinedEvent);
+
+        if (this.started) {
+            connection.send(new GameStartEvent());
+        }
     }
 
     broadcastPlayerlist() {
-        const playerlist: PlayerlistPlayer[] = this.players.map((player, index) => {
-            return {
-                username: player.username,
-                hash: player.hash,
-                cardCount: player.deck.length,
-                active: index == this.activePlayer,
-            };
-        });
+        let playerlist: PlayerlistPlayer[] = this.players
+            .map((player, index) => {
+                return {
+                    username: player.username,
+                    uuid: player.uuid,
+                    cardCount: player.deck.length,
+                    active: index == this.activePlayer,
+                    spectating: false,
+                };
+            })
+            .concat(
+                this.spectators.map((player) => {
+                    return {
+                        username: player.username,
+                        uuid: player.uuid,
+                        cardCount: player.deck.length,
+                        active: false,
+                        spectating: true,
+                    };
+                })
+            );
+
+        new UpdatePlayerlistEvent(playerlist);
+
         this.broadcastEvent(new UpdatePlayerlistEvent(playerlist));
     }
 
     leave(leftPlayer: Player) {
+        if (this.isPlayersTurn(leftPlayer)) {
+            this.activePlayer--;
+            this.nextPlayer(1);
+        }
+
         this.players = this.players.filter((player) => player.username != leftPlayer.username);
 
         // Update playerlist for all clients
@@ -100,18 +133,33 @@ export class Game extends EventSystem {
         const playerLeftEvent = new PlayerLeftEvent(leftPlayer.uuid);
         this.broadcastEvent(playerLeftEvent);
         this.emit(playerLeftEvent);
+
+        if (this.players.length != 0) {
+            if (this.admin == leftPlayer) {
+                this.admin = this.players[0];
+                this.broadcastEvent(new UpdateAdminEvent(this.admin.uuid));
+            }
+        } else {
+            this.broadcastEvent(new GameOverEvent());
+            this.started = false;
+        }
     }
 
     isAdmin(player: Player): boolean {
-        return this.players.indexOf(player) == 0;
+        return this.admin == player;
     }
 
     start() {
+        this.started = true;
+        this.players = [...this.spectators];
+        this.spectators = [];
+
         this.cardGenerator = new CardGenerator(
             getGameMode(this.settings.gameMode.value || "classic")
         );
 
         this.activePlayer = 0;
+        this.drawAmount = 1;
 
         this.broadcastEvent(new GameStartEvent());
 
@@ -122,12 +170,16 @@ export class Game extends EventSystem {
             player.deck = cards;
             player.connection.send(new UpdateDeckEvent(player.deck));
         }
-        this.broadcastEvent(new PlayerTurnEvent(this.players[this.activePlayer].uuid));
 
+        this.broadcastEvent(new PlayerTurnEvent(this.players[this.activePlayer].uuid));
         this.broadcastEvent(new CardPlacedEvent(this.cardGenerator.generate(1)[0]));
+        this.broadcastEvent(new UpdateDrawAmountEvent(this.drawAmount));
+        this.broadcastPlayerlist();
     }
 
     nextPlayer(skip: number = 1) {
+        console.log("Incrementing active player by " + skip);
+
         while (skip != 0) {
             this.activePlayer++;
             skip--;
@@ -137,7 +189,12 @@ export class Game extends EventSystem {
             }
         }
 
-        this.broadcastEvent(new PlayerTurnEvent(this.players[this.activePlayer].uuid));
+        console.log("New active player: " + this.activePlayer);
+
+        if (this.players[this.activePlayer])
+            this.broadcastEvent(new PlayerTurnEvent(this.players[this.activePlayer].uuid));
+
+        this.broadcastPlayerlist();
     }
 
     isPlayersTurn(player: Player): boolean {
@@ -160,13 +217,36 @@ export class Game extends EventSystem {
         this.nextPlayer(1);
     }
 
+    playerDone(player: Player) {
+        // Check if the player has won
+        if (player.deck.length == 0) {
+            this.broadcastEvent(new PlayerDoneEvent(player.uuid));
+            // Move player to spectators
+            this.spectators.push(player);
+            this.players = this.players.filter((p) => p.uuid != player.uuid);
+
+            console.log("Player", player.username, "is done.");
+
+            this.activePlayer--;
+            console.log("Active player is now", this.activePlayer);
+        }
+
+        // Check if the game is over
+        if (this.players.length == 0) {
+            this.broadcastEvent(new GameOverEvent());
+            this.started = false;
+            return;
+        }
+    }
+
     colorWished(player: Player, color?: CardColorType) {
         player.wishing = false;
+        if (!this.isPlayersTurn(player)) return;
+
+        if (player.deck.length == 0) this.playerDone(player);
 
         // If no color was specified, the next player can choose the color
         if (!color) return this.nextPlayer(1);
-
-        if (!this.isPlayersTurn(player)) return;
 
         this.topCard.color.color = color;
 
@@ -198,12 +278,6 @@ export class Game extends EventSystem {
         player.deck = player.deck.filter((card) => card.id != deckCard.id);
         this.broadcastEvent(new CardPlacedEvent(deckCard));
 
-        // Check if the player has won
-        if (player.deck.length == 0) {
-            this.broadcastEvent(new PlayerDoneEvent(player.uuid));
-            // TODO: Add player to spectators
-        }
-
         // Handle special cards
         switch (deckCard.type) {
             case "p4":
@@ -219,6 +293,7 @@ export class Game extends EventSystem {
                 break;
 
             case "sk": // Skip next player -> advance twice
+                if (player.deck.length == 0) this.playerDone(player);
                 this.nextPlayer(2);
                 return;
 
@@ -270,11 +345,13 @@ export class Game extends EventSystem {
                 break;
         }
 
+        if (player.deck.length == 0) this.playerDone(player);
+
         this.nextPlayer(1);
     }
 
     broadcastEvent(event: BaseEvent) {
-        this.players.forEach((player) => {
+        [...this.players, ...this.spectators].forEach((player) => {
             player.connection.send(event);
         });
     }
