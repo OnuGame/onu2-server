@@ -172,7 +172,8 @@ export class Game extends EventSystem {
         }
 
         this.broadcastEvent(new PlayerTurnEvent(this.players[this.activePlayer].uuid));
-        this.broadcastEvent(new CardPlacedEvent(this.cardGenerator.generate(1)[0]));
+        this.topCard = this.cardGenerator.generate(1)[0];
+        this.broadcastEvent(new CardPlacedEvent(this.topCard));
         this.broadcastEvent(new UpdateDrawAmountEvent(this.drawAmount));
         this.broadcastPlayerlist();
     }
