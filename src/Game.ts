@@ -29,7 +29,6 @@ import { Player } from "./Player";
 export class Game extends EventSystem {
     players: Player[] = [];
     spectators: Player[] = [];
-    lobbyPlayerlist: Player[] = [];
     activePlayer: number = -1;
     topCard: Card = new Card("w", new CardColor("c"));
     drawAmount: number = 1;
