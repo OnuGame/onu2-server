@@ -1,9 +1,11 @@
 import { JoinLobbyEvent, PlayerLeftEvent, ReconnectEvent } from "@lebogo/onu2-shared";
 import express from "express";
+import { readFileSync } from "fs";
 import { Server } from "ws";
-import { port } from "../config.json";
 import { ClientConnection } from "./ClientConnection";
 import { Game } from "./Game";
+
+const { port } = JSON.parse(readFileSync("../config.json", "utf-8"));
 
 const app = express();
 
