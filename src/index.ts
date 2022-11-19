@@ -24,8 +24,7 @@ wsServer.on("connection", (socket) => {
             games.set(lobbyCode, game);
 
             game.registerEvent<PlayerLeftEvent>("PlayerLeftEvent", (event) => {
-                if (game?.players.length === 0) {
-                    console.log(`Deleting game ${lobbyCode}`);
+                if (!game?.players.length) {
                     games.delete(lobbyCode);
                 }
             });
