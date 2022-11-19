@@ -178,8 +178,6 @@ export class Game extends EventSystem {
     }
 
     nextPlayer(skip: number = 1) {
-        console.log("Incrementing active player by " + skip);
-
         while (skip != 0) {
             this.activePlayer++;
             skip--;
@@ -188,8 +186,6 @@ export class Game extends EventSystem {
                 this.activePlayer = 0;
             }
         }
-
-        console.log("New active player: " + this.activePlayer);
 
         if (this.players[this.activePlayer])
             this.broadcastEvent(new PlayerTurnEvent(this.players[this.activePlayer].uuid));
