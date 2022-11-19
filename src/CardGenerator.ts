@@ -28,8 +28,6 @@ export class CardGenerator {
                 .filter((c) => c.color === color)
                 .sort(() => Math.random() - 0.5)[0];
 
-            console.log(pickedCard);
-
             const card = new Card(pickedCard.type, new CardColor(pickedCard.color));
 
             cards.push(card);

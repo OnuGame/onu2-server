@@ -1,14 +1,20 @@
 import { JoinLobbyEvent, PlayerLeftEvent, ReconnectEvent } from "@lebogo/onu2-shared";
 import express from "express";
+import { readFileSync } from "fs";
 import { Server } from "ws";
 import { ClientConnection } from "./ClientConnection";
 import { Game } from "./Game";
+
+const { port } = JSON.parse(readFileSync("../config.json", "utf-8"));
 
 const app = express();
 
 const games: Map<string, Game> = new Map();
 
 const wsServer = new Server({ noServer: true });
+
+// Serves static files. You need to create a client build first and put it into the public folder.
+app.use(express.static("../public"));
 
 wsServer.on("connection", (socket) => {
     const connection = new ClientConnection(socket);
@@ -44,7 +50,10 @@ wsServer.on("connection", (socket) => {
     });
 });
 
-const server = app.listen(3000);
+const server = app.listen(port, () => {
+    console.log(`Listening on port ${port}`);
+});
+
 server.on("upgrade", (request, socket, head) => {
     wsServer.handleUpgrade(request, socket, head, (socket) => {
         wsServer.emit("connection", socket, request);
