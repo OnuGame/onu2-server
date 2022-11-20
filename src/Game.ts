@@ -136,9 +136,9 @@ export class Game extends EventSystem {
         this.broadcastEvent(playerLeftEvent);
         this.emit(playerLeftEvent);
 
-        if (this.players.length != 0) {
+        if ([...this.players, ...this.spectators].length != 0) {
             if (this.admin == leftPlayer) {
-                this.admin = this.players[0];
+                this.admin = [...this.players, ...this.spectators][0];
                 this.broadcastEvent(new UpdateAdminEvent(this.admin.uuid));
             }
         } else {
