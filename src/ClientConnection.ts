@@ -17,6 +17,7 @@ export class ClientConnection extends EventSystem {
 
             this.connected = false;
             this.parse('{"name":"DisconnectedEvent"}');
+            clearInterval(this.pingInterval);
         });
 
         this.pingInterval = setInterval(() => {
