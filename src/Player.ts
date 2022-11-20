@@ -35,8 +35,6 @@ export class Player {
         this.connection.registerEvent<DisconnectedEvent>("DisconnectedEvent", () => {
             console.log(`Player ${this.username} disconnected`);
 
-            this.game.broadcastPlayerlist();
-
             this.game.leave(this);
         });
 

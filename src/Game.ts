@@ -122,6 +122,9 @@ export class Game extends EventSystem {
         }
 
         this.players = this.players.filter((player) => player.username != leftPlayer.username);
+        this.spectators = this.spectators.filter(
+            (player) => player.username != leftPlayer.username
+        );
 
         // Update playerlist for all clients
         // TODO: This may be redundant because of the playerleft event.
