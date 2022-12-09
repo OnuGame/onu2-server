@@ -30,6 +30,7 @@ export class Game extends EventSystem {
     players: Player[] = [];
     spectators: Player[] = [];
     activePlayer: number = -1;
+    startingPlayerCount: number = 0;
     topCard: Card = new Card("w", new CardColor("c"));
     drawAmount: number = 1;
     cardGenerator?: CardGenerator;
@@ -153,8 +154,12 @@ export class Game extends EventSystem {
 
     start() {
         this.started = true;
+
         this.players = [...this.spectators];
         this.spectators = [];
+
+        this.startingPlayerCount = this.players.length;
+        console.log(`Starting game with ${this.players.length} players.`);
 
         this.cardGenerator = new CardGenerator(
             getGameMode(this.settings.gameMode.value || "classic")
@@ -231,7 +236,10 @@ export class Game extends EventSystem {
         }
 
         // Check if the game is over
-        if (this.players.length == 0) {
+        if (
+            (this.players.length == 1 && this.startingPlayerCount > 1) ||
+            this.players.length == 0
+        ) {
             this.broadcastEvent(new GameOverEvent());
             this.started = false;
             return;
