@@ -18,6 +18,7 @@ import {
     PlayerTurnEvent,
     SettingsChangedEvent,
     UpdateAdminEvent,
+    UpdateColorEvent,
     UpdateDeckEvent,
     UpdateDrawAmountEvent,
     UpdatePlayerlistEvent,
@@ -258,7 +259,7 @@ export class Game extends EventSystem {
         this.topCard.color.color = color;
 
         // Update top card of all players
-        this.broadcastEvent(new CardPlacedEvent(this.topCard));
+        this.broadcastEvent(new UpdateColorEvent(new CardColor(color)));
 
         // Increment player since the player who wished the color is done.
         this.nextPlayer(1);
