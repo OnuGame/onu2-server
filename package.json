@@ -16,7 +16,7 @@
     "typescript": "^4.8.2"
   },
   "name": "@lebogo/onu2-server",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
