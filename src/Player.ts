@@ -2,7 +2,6 @@ import {
     Card,
     CardPlacedEvent,
     CardRequestEvent,
-    ColorWishEvent,
     DisconnectedEvent,
     GameStartEvent,
     SettingsChangedEvent,
@@ -16,7 +15,7 @@ export class Player {
     uuid: string = randomUUID();
     deck: Card[] = [];
     disconnectedTimeout: NodeJS.Timeout | undefined;
-    wishing: boolean = false;
+    spectating: boolean = true;
 
     constructor(public game: Game, public connection: ClientConnection, public username: string) {
         this.registerEvents();
@@ -42,10 +41,6 @@ export class Player {
             this.game.drawCards(this);
         });
 
-        this.connection.registerEvent<ColorWishEvent>("ColorWishEvent", (event) => {
-            this.game.colorWished(this, event.color);
-        });
-
         this.connection.registerEvent<CardPlacedEvent>("CardPlacedEvent", (event) => {
             this.game.placeCard(event.card, this);
         });
@@ -55,6 +50,10 @@ export class Player {
             if (!this.game.isAdmin(this)) return;
 
             this.game.settings = event.settings;
+            this.game.gameMode =
+                this.game.gameModes.find((gameMode) => {
+                    return gameMode.name == event.settings.gameMode.value;
+                }) || this.game.gameModes[0];
 
             this.game.broadcastEvent(event);
         });
