@@ -18,9 +18,9 @@ import { ClassicGameMode } from "./ClassicGameMode";
 
 export class SpecialGameMode extends ClassicGameMode {
     name: string = "Special";
-    description: string = `An extended version of the classic gamemode. It adds two additional cards and colors.
+    description: string = `An extended version of the classic gamemode. It adds three additional cards and two additional colors.
                     Cyan can be placed on blue and green cards and Purple can be placed on red and blue cards (and vice versa).
-                    The two additional cards are the 'Random' and 'Cycle' cards. The 'Random' card can be placed`;
+                    The three additional cards are the 'Random', 'Cycle' and 'Random Color' cards. The 'Random' card shuffles the decks of all player together and distributes them evenly. The 'Cycle' card cycles the cards of each player. Player 1 gets the cards of player 2, player 2 gets the cards of player 3, etc. The 'Random Color'card can be placed on any color and takes a random color when placed.`;
 
     presets: CardPreset[] = [
         EXTENDED_CLASSIC_PRESET,
