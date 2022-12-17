@@ -1,8 +1,19 @@
-import { Card, CardColor } from "@lebogo/onu2-shared";
+import { Card, CardColor, CardColorType } from "@lebogo/onu2-shared";
 import { GameMode } from "./GameModes/GameMode";
 
 export class CardGenerator {
     constructor(public mode: GameMode) {}
+
+    getAllColors(): CardColorType[] {
+        const { presets } = this.mode;
+        const colors = new Set();
+        for (const preset of presets) {
+            for (const color of preset.colors) {
+                colors.add(color);
+            }
+        }
+        return [...colors] as CardColorType[];
+    }
 
     generate(size: number) {
         const cards: Card[] = [];

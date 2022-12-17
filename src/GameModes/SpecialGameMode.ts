@@ -1,8 +1,15 @@
-import { Card, ColorWishEvent, UpdateDeckEvent } from "@lebogo/onu2-shared";
+import {
+    Card,
+    CardColor,
+    ColorWishEvent,
+    UpdateColorEvent,
+    UpdateDeckEvent,
+} from "@lebogo/onu2-shared";
 import { CardGenerator } from "../CardGenerator";
 import { CardPreset } from "../CardPreset";
 import { EXTENDED_ACTION_PRESET } from "../CardPresets/ExtendedActionPreset";
 import { EXTENDED_CLASSIC_PRESET } from "../CardPresets/ExtendedClassicPreset";
+import { RANDOM_COLOR_PRESET } from "../CardPresets/RandomColorPreset";
 import { RANDOM_CYCLE_PRESET } from "../CardPresets/RandomCyclePreset";
 import { WISH_PRESET } from "../CardPresets/WishPreset";
 import { Game } from "../Game";
@@ -20,6 +27,7 @@ export class SpecialGameMode extends ClassicGameMode {
         WISH_PRESET,
         EXTENDED_ACTION_PRESET,
         RANDOM_CYCLE_PRESET,
+        RANDOM_COLOR_PRESET,
     ];
 
     constructor(game: Game) {
@@ -109,7 +117,13 @@ export class SpecialGameMode extends ClassicGameMode {
                 }
 
                 break;
+            case "rc":
+                let allColors = this.cardGenerator.getAllColors();
+                let color = allColors[Math.floor(Math.random() * allColors.length)];
+                this.game.topCard.color = new CardColor(color);
+                this.game.broadcastEvent(new UpdateColorEvent(this.game.topCard.color));
 
+                break;
             default:
                 break;
         }
