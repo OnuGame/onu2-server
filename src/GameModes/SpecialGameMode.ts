@@ -70,7 +70,6 @@ export class SpecialGameMode extends ClassicGameMode {
                 break;
 
             case "sk": // Skip next player -> advance twice
-                if (player.deck.length == 0) this.game.playerDone(player);
                 this.game.nextPlayer(2);
                 return;
 
@@ -119,6 +118,7 @@ export class SpecialGameMode extends ClassicGameMode {
                 break;
             case "rc":
                 let allColors = this.cardGenerator.getAllColors();
+                while (!allColors) allColors = this.cardGenerator.getAllColors();
                 let color = allColors[Math.floor(Math.random() * allColors.length)];
                 this.game.topCard.color = new CardColor(color);
                 this.game.broadcastEvent(new UpdateColorEvent(this.game.topCard.color));
@@ -127,8 +127,6 @@ export class SpecialGameMode extends ClassicGameMode {
             default:
                 break;
         }
-
-        if (player.deck.length == 0) this.game.playerDone(player);
 
         this.game.nextPlayer(1);
     }
