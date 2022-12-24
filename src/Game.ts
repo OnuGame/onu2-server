@@ -184,24 +184,15 @@ export class Game extends EventSystem {
                 return;
             }
 
-            console.log(`1 Skipping ${skip} players.`);
             this.activePlayer++;
 
-            console.log(`2 Active player: ${this.activePlayer}`);
-
             if (this.activePlayer >= this.players.length) {
-                console.log(`3 Active player is out of bounds. Resetting to 0.`);
                 this.activePlayer = 0;
             }
 
-            console.log(`4 Checking if player is still in game...`);
             if (!this.players[this.activePlayer].spectating) {
-                console.log(`5 Player is still in game.`);
                 skip--;
             }
-
-            console.log(`6 Skip: ${skip}`);
-            console.log(`7 Active player: ${this.activePlayer}`);
         }
 
         if (this.players[this.activePlayer])
