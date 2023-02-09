@@ -90,9 +90,7 @@ export class SpecialGameMode extends ClassicGameMode {
 
                 // loop over all players and give them a card until there are no cards left
                 while (cards.length > 0) {
-                    for (let player of this.game.players.filter(
-                        (player) => player.spectating == false
-                    )) {
+                    for (let player of this.game.getNonSpectatingPlayers()) {
                         if (cards.length == 0) break;
                         player.deck.push(cards.pop()!);
                     }

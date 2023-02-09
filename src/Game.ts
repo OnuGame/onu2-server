@@ -99,14 +99,26 @@ export class Game extends EventSystem {
     }
 
     broadcastPlayerlist() {
-        let playerlist: PlayerlistPlayer[] = this.players.map((player, index) => {
-            return {
+        let playerlist: PlayerlistPlayer[] = [];
+
+        this.getNonSpectatingPlayers().forEach((player, index) => {
+            playerlist.push({
                 username: player.username,
                 uuid: player.uuid,
                 cardCount: player.deck.length,
                 active: index == this.activePlayer,
-                spectating: player.spectating,
-            };
+                spectating: false,
+            });
+        });
+
+        this.getSpecatingPlayers().forEach((player) => {
+            playerlist.push({
+                username: player.username,
+                uuid: player.uuid,
+                cardCount: player.deck.length,
+                active: false,
+                spectating: true,
+            });
         });
 
         new UpdatePlayerlistEvent(playerlist);
@@ -117,10 +129,13 @@ export class Game extends EventSystem {
     leave(leftPlayer: Player) {
         if (this.isPlayersTurn(leftPlayer)) {
             this.activePlayer--;
-            this.nextPlayer(1);
-        }
+            console.log(`Active Player ${leftPlayer.username} left the game. Skipping turn.`);
 
-        this.players = this.players.filter((player) => player.username != leftPlayer.username);
+            this.players = this.players.filter((player) => player.username != leftPlayer.username);
+            this.nextPlayer(1);
+        } else {
+            this.players = this.players.filter((player) => player.username != leftPlayer.username);
+        }
 
         // Update playerlist for all clients
         // TODO: This may be redundant because of the playerleft event.
@@ -137,9 +152,6 @@ export class Game extends EventSystem {
                 this.admin = this.players[0];
                 this.broadcastEvent(new UpdateAdminEvent(this.admin.uuid));
             }
-        } else {
-            this.broadcastEvent(new GameOverEvent());
-            this.started = false;
         }
     }
 
@@ -170,39 +182,48 @@ export class Game extends EventSystem {
         this.broadcastPlayerlist();
     }
 
+    getNonSpectatingPlayers(): Player[] {
+        return this.players.filter((player) => !player.spectating);
+    }
+
+    getSpecatingPlayers(): Player[] {
+        return this.players.filter((player) => player.spectating);
+    }
+
     nextPlayer(skip: number = 1) {
         // check if current player is done
-        if (this.players[this.activePlayer] && this.players[this.activePlayer].deck.length == 0) {
+
+        // TODO: Currently crashing the server when this is called. IMPORTANT TO FIX!
+        const players = this.getNonSpectatingPlayers();
+
+        if (players[this.activePlayer] && players[this.activePlayer].deck.length == 0) {
             this.playerDone(this.players[this.activePlayer]);
         }
 
-        while (skip != 0 && this.players.filter((player) => !player.spectating).length != 0) {
-            // check if there are any non-spectating players left
-            if (this.players.filter((player) => !player.spectating).length == 0) {
-                this.broadcastEvent(new GameOverEvent());
-                this.started = false;
-                return;
-            }
+        if (players.length == 0) {
+            this.broadcastEvent(new GameOverEvent());
+            this.started = false;
+            return;
+        }
 
+        while (skip != 0 && players.length != 0) {
             this.activePlayer++;
+            skip--;
 
-            if (this.activePlayer >= this.players.length) {
+            if (this.activePlayer >= this.getNonSpectatingPlayers().length) {
                 this.activePlayer = 0;
-            }
-
-            if (!this.players[this.activePlayer].spectating) {
-                skip--;
             }
         }
 
-        if (this.players[this.activePlayer])
-            this.broadcastEvent(new PlayerTurnEvent(this.players[this.activePlayer].uuid));
+        if (players[this.activePlayer])
+            this.broadcastEvent(new PlayerTurnEvent(players[this.activePlayer].uuid));
+        else this.broadcastEvent(new GameOverEvent());
 
         this.broadcastPlayerlist();
     }
 
     isPlayersTurn(player: Player): boolean {
-        return this.players[this.activePlayer] == player;
+        return this.getNonSpectatingPlayers()[this.activePlayer] == player;
     }
 
     placeTopCard(card: Card) {
@@ -229,12 +250,11 @@ export class Game extends EventSystem {
     playerDone(player: Player) {
         this.broadcastEvent(new PlayerDoneEvent(player.uuid));
         player.spectating = true;
-        console.log("Player", player.username, "is now done and spectating.");
 
         this.activePlayer--;
 
         // Check if the game is over
-        let playerCount = this.players.filter((player) => !player.spectating).length;
+        let playerCount = this.getNonSpectatingPlayers.length;
 
         if ((playerCount == 1 && this.startingPlayerCount > 1) || playerCount == 0) {
             this.broadcastEvent(new GameOverEvent());
