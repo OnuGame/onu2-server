@@ -19,7 +19,8 @@
     "version": "1.0.6",
     "main": "index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "cd src && ts-node index.ts"
     },
     "author": "LeBogo",
     "license": "CC BY-NC-SA 4.0",
