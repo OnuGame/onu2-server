@@ -197,7 +197,7 @@ export class Game extends EventSystem {
         const players = this.getNonSpectatingPlayers();
 
         if (players[this.activePlayer] && players[this.activePlayer].deck.length == 0) {
-            this.playerDone(this.players[this.activePlayer]);
+            this.playerDone(players[this.activePlayer]);
         }
 
         if (players.length == 0) {
@@ -215,9 +215,11 @@ export class Game extends EventSystem {
             }
         }
 
-        if (players[this.activePlayer])
+        if (players[this.activePlayer]) {
             this.broadcastEvent(new PlayerTurnEvent(players[this.activePlayer].uuid));
-        else this.broadcastEvent(new GameOverEvent());
+        } else {
+            this.broadcastEvent(new GameOverEvent());
+        }
 
         this.broadcastPlayerlist();
     }
@@ -254,7 +256,7 @@ export class Game extends EventSystem {
         this.activePlayer--;
 
         // Check if the game is over
-        let playerCount = this.getNonSpectatingPlayers.length;
+        let playerCount = this.getNonSpectatingPlayers().length;
 
         if ((playerCount == 1 && this.startingPlayerCount > 1) || playerCount == 0) {
             this.broadcastEvent(new GameOverEvent());
