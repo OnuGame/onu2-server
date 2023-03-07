@@ -13,6 +13,7 @@
         "@types/node": "^18.7.14",
         "@types/uuid": "^8.3.4",
         "@types/ws": "^8.5.3",
+        "nodemon": "^2.0.21",
         "prettier": "^2.7.1",
         "prettier-plugin-organize-imports": "^3.1.1",
         "typescript": "^4.8.2"
@@ -22,7 +23,7 @@
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "dev": "cd src && ts-node index.ts"
+        "dev": "cd src && nodemon index.ts"
     },
     "author": "LeBogo",
     "license": "CC BY-NC-SA 4.0",
