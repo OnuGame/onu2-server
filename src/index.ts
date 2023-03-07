@@ -1,11 +1,12 @@
 import { JoinLobbyEvent, PlayerLeftEvent, ReconnectEvent } from "@lebogo/onu2-shared";
 import express from "express";
+import httpProxy from "express-http-proxy";
 import { readFileSync } from "fs";
 import { Server } from "ws";
 import { ClientConnection } from "./ClientConnection";
 import { Game } from "./Game";
 
-const { port } = JSON.parse(readFileSync("../config.json", "utf-8"));
+const { port, proxy } = JSON.parse(readFileSync("../config.json", "utf-8"));
 
 const app = express();
 
@@ -53,6 +54,10 @@ wsServer.on("connection", (socket) => {
         player.reconnect(connection);
     });
 });
+
+if (proxy && proxy.enabled && proxy.url) {
+    app.use(httpProxy(proxy.url));
+}
 
 const server = app.listen(port, () => {
     console.log(`Listening on port ${port}`);
