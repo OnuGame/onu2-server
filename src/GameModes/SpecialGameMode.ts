@@ -55,6 +55,9 @@ export class SpecialGameMode extends ClassicGameMode {
         // Remove the card from the players deck
         player.deck = player.deck.filter((card) => card.id != deckCard.id);
 
+        let players = this.game.getNonSpectatingPlayers();
+        let spectators = this.game.getSpecatingPlayers();
+
         // Handle special cards
         switch (deckCard.type) {
             case "p4":
@@ -74,13 +77,13 @@ export class SpecialGameMode extends ClassicGameMode {
                 return;
 
             case "sw": // Reverse the player order
-                this.game.players.reverse();
-                this.game.activePlayer = this.game.players.length - this.game.activePlayer - 1;
+                this.game.players = [...players.reverse(), ...spectators];
+                this.game.activePlayer = players.length - this.game.activePlayer - 1;
                 break;
 
             case "rd": // Collect all cards from the players and distribute them evenly
                 let cards: Card[] = [];
-                for (let player of this.game.players) {
+                for (let player of players) {
                     cards.push(...player.deck);
                     player.deck = [];
                 }
@@ -90,25 +93,25 @@ export class SpecialGameMode extends ClassicGameMode {
 
                 // loop over all players and give them a card until there are no cards left
                 while (cards.length > 0) {
-                    for (let player of this.game.getNonSpectatingPlayers()) {
+                    for (let player of players) {
                         if (cards.length == 0) break;
                         player.deck.push(cards.pop()!);
                     }
                 }
 
                 // Update the decks of all players
-                for (let player of this.game.players) {
+                for (let player of players) {
                     player.connection.send(new UpdateDeckEvent(player.deck));
                 }
                 break;
 
             case "cy": // Cycle the cards of each player. Player 1 gets the cards of player 2, player 2 gets the cards of player 3, etc.
-                const lastPlayer = [...this.game.players].pop();
-                if (lastPlayer) [...this.game.players].unshift(lastPlayer);
+                const lastPlayer = [...players].pop();
+                if (lastPlayer) [...players].unshift(lastPlayer);
 
                 // Update the decks of all players
-                var previousDeck = this.game.players[this.game.players.length - 1].deck;
-                for (let player of this.game.players) {
+                var previousDeck = players[players.length - 1].deck;
+                for (let player of players) {
                     const currentDeck = player.deck;
                     player.deck = previousDeck;
                     previousDeck = currentDeck;
