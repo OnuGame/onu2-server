@@ -59,6 +59,10 @@ if (proxy && proxy.enabled && proxy.url) {
     app.use(httpProxy(proxy.url));
 }
 
+app.get("/ping", (req, res) => {
+    res.status(200).send("ok");
+});
+
 const server = app.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });
