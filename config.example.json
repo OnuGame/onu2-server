@@ -3,5 +3,11 @@
     "proxy": {
         "enabled": false,
         "url": "https://onu.lebogo.me"
+    },
+    "logs": {
+        "directory": "../logs",
+        "client": {
+            "allow": true
+        }
     }
 }

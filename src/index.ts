@@ -1,14 +1,18 @@
 import { JoinLobbyEvent, PlayerLeftEvent, ReconnectEvent } from "@lebogo/onu2-shared";
+import cors from "cors";
 import express from "express";
 import httpProxy from "express-http-proxy";
-import { readFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import path from "path";
 import { Server } from "ws";
 import { ClientConnection } from "./ClientConnection";
 import { Game } from "./Game";
 
-const { port, proxy } = JSON.parse(readFileSync("../config.json", "utf-8"));
+const { port, proxy, logs } = JSON.parse(readFileSync("../config.json", "utf-8"));
 
 const app = express();
+app.use(cors());
+app.use(express.text());
 
 const games: Map<string, Game> = new Map();
 
@@ -61,6 +65,20 @@ if (proxy && proxy.enabled && proxy.url) {
 
 app.get("/ping", (req, res) => {
     res.status(200).send("ok");
+});
+
+app.post("/report", (req, res) => {
+    if (!logs?.client?.allow) return res.status(409).send("feature disabled on server");
+
+    const filename = `onu-log-${Date.now()}.log`;
+    const logContent = req.body;
+
+    const logDirectory = path.resolve(path.join(logs.directory, "client"));
+    if (!existsSync(logDirectory)) mkdirSync(logDirectory, { recursive: true });
+
+    writeFileSync(path.join(logDirectory, filename), logContent);
+
+    res.send("saved");
 });
 
 const server = app.listen(port, () => {
