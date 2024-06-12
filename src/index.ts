@@ -8,7 +8,7 @@ import { Server } from "ws";
 import { ClientConnection } from "./ClientConnection";
 import { Game } from "./Game";
 
-const { port, proxy, logs } = JSON.parse(readFileSync("../config.json", "utf-8"));
+const { port, proxy, logs } = JSON.parse(readFileSync("./config.json", "utf-8"));
 
 const app = express();
 app.use(cors());
@@ -19,7 +19,7 @@ const games: Map<string, Game> = new Map();
 const wsServer = new Server({ noServer: true });
 
 // Serves static files. You need to create a client build first and put it into the public folder.
-app.use(express.static("../public"));
+app.use(express.static("./public"));
 
 wsServer.on("connection", (socket) => {
     const connection = new ClientConnection(socket);
