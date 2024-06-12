@@ -6,7 +6,7 @@ export class ClientConnection extends EventSystem {
     listeners: Map<string, Function[]> = new Map();
     connected: boolean = true;
     lastPing: number = -1;
-    pingInterval: NodeJS.Timer;
+    pingInterval: NodeJS.Timeout;
 
     constructor(private socket: WebSocket) {
         super();
