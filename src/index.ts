@@ -6,9 +6,13 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
 import { Server } from "ws";
 import { ClientConnection } from "./ClientConnection";
+import { Config } from "./Config";
 import { Game } from "./Game";
+import { Logger } from "./Logger";
 
-const { port, proxy, logs } = JSON.parse(readFileSync("./config.json", "utf-8"));
+const { port, proxy, logs } = JSON.parse(readFileSync("./config.json", "utf-8")) as Config;
+
+Logger.setLogDirectory(path.resolve(path.join(logs.directory, "server")));
 
 const app = express();
 app.use(cors());
@@ -25,7 +29,7 @@ wsServer.on("connection", (socket) => {
     const connection = new ClientConnection(socket);
     let game: Game | undefined;
 
-    console.log("New connection");
+    Logger.log("New connection");
 
     connection.registerEvent<JoinLobbyEvent>("JoinLobbyEvent", ({ username, lobbyCode }) => {
         if (!username.length) username = "Player" + Math.floor(Math.random() * 1000);
@@ -33,19 +37,19 @@ wsServer.on("connection", (socket) => {
 
         game = games.get(lobbyCode);
         if (!game) {
-            console.log(`Creating game ${lobbyCode}`);
+            Logger.log(`Creating game ${lobbyCode}`);
             game = new Game(lobbyCode);
             games.set(lobbyCode, game);
 
             game.registerEvent<PlayerLeftEvent>("PlayerLeftEvent", (event) => {
                 if (game && game.players.length == 0) {
                     games.delete(lobbyCode);
-                    console.log("Deleting game " + lobbyCode);
+                    Logger.log("Deleting game " + lobbyCode);
                 }
             });
         }
 
-        console.log(`Adding Player ${username} to ${lobbyCode}`);
+        Logger.log(`Adding Player ${username} to ${lobbyCode}`);
         game.join(username, connection);
     });
 
@@ -53,7 +57,7 @@ wsServer.on("connection", (socket) => {
         if (!game) return;
         let player = game.players.find((player) => player.uuid == uuid);
         if (!player) return;
-        console.log(`Reconnecting Player ${player.username} to ${lobbyCode}`);
+        Logger.log(`Reconnecting Player ${player.username} to ${lobbyCode}`);
 
         player.reconnect(connection);
     });
@@ -82,7 +86,7 @@ app.post("/report", (req, res) => {
 });
 
 const server = app.listen(port, () => {
-    console.log(`Listening on port ${port}`);
+    Logger.log(`Listening on port ${port}`);
 });
 
 server.on("upgrade", (request, socket, head) => {

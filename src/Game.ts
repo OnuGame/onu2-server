@@ -24,6 +24,7 @@ import { ClassicGameMode } from "./GameModes/ClassicGameMode";
 import { GameMode } from "./GameModes/GameMode";
 import { LiteGameMode } from "./GameModes/LiteGameMode";
 import { SpecialGameMode } from "./GameModes/SpecialGameMode";
+import { Logger } from "./Logger";
 import { Player } from "./Player";
 
 export class Game extends EventSystem {
@@ -129,7 +130,7 @@ export class Game extends EventSystem {
     leave(leftPlayer: Player) {
         if (this.isPlayersTurn(leftPlayer)) {
             this.activePlayer--;
-            console.log(`Active Player ${leftPlayer.username} left the game. Skipping turn.`);
+            Logger.log(`Active Player ${leftPlayer.username} left the game. Skipping turn.`);
 
             this.players = this.players.filter((player) => player.username != leftPlayer.username);
             this.nextPlayer(1);
@@ -167,7 +168,7 @@ export class Game extends EventSystem {
         });
 
         this.startingPlayerCount = this.players.length;
-        console.log(`Starting game with ${this.players.length} players.`);
+        Logger.log(`Starting game with ${this.players.length} players.`);
 
         this.activePlayer = 0;
         this.drawAmount = 1;

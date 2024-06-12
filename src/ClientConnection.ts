@@ -1,6 +1,7 @@
 import { BaseEvent, EventSystem } from "@lebogo/eventsystem";
 import { PingEvent } from "@lebogo/onu2-shared";
 import { WebSocket } from "ws";
+import { Logger } from "./Logger";
 
 export class ClientConnection extends EventSystem {
     listeners: Map<string, Function[]> = new Map();
@@ -13,7 +14,7 @@ export class ClientConnection extends EventSystem {
 
         socket.on("message", this.messageReceived.bind(this));
         socket.on("close", () => {
-            console.log("Connection closed");
+            Logger.log("Connection closed");
 
             this.connected = false;
             this.parse('{"name":"DisconnectedEvent"}');

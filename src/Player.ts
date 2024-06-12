@@ -10,6 +10,7 @@ import { randomUUID } from "crypto";
 import { ClientConnection } from "./ClientConnection";
 
 import { Game } from "./Game";
+import { Logger } from "./Logger";
 
 export class Player {
     uuid: string = randomUUID();
@@ -32,7 +33,7 @@ export class Player {
 
     registerEvents() {
         this.connection.registerEvent<DisconnectedEvent>("DisconnectedEvent", () => {
-            console.log(`Player ${this.username} disconnected`);
+            Logger.log(`Player ${this.username} disconnected`);
 
             this.game.leave(this);
         });
