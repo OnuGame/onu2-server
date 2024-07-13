@@ -30,7 +30,7 @@
         "start": "node dist/index.js"
     },
     "author": "LeBogo",
-    "license": "CC BY-NC-SA 4.0",
+    "license": "GPL-3.0",
     "description": "The Official server software for the Onu2 Project",
     "repository": {
         "type": "git",
