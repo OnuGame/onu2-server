@@ -1,4 +1,9 @@
-import { JoinLobbyEvent, PlayerLeftEvent, ReconnectEvent } from "@lebogo/onu2-shared";
+import {
+    JoinLobbyEvent,
+    PlayerLeftEvent,
+    ReconnectEvent,
+    SpectateLobbyEvent,
+} from "@lebogo/onu2-shared";
 import cors from "cors";
 import express from "express";
 import httpProxy from "express-http-proxy";
@@ -30,6 +35,13 @@ wsServer.on("connection", (socket) => {
     let game: Game | undefined;
 
     Logger.log("New connection");
+
+    connection.registerEvent<SpectateLobbyEvent>("SpectateLobbyEvent", ({ lobbyCode }) => {
+        game = games.get(lobbyCode);
+        if (!game) return;
+
+        game.addSpectator(connection);
+    });
 
     connection.registerEvent<JoinLobbyEvent>("JoinLobbyEvent", ({ username, lobbyCode }) => {
         if (!username.length) username = "Player" + Math.floor(Math.random() * 1000);

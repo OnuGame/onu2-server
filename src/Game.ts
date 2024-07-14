@@ -4,6 +4,7 @@ import {
     CardColor,
     CardPlacedEvent,
     CardRequestEvent,
+    DisconnectedEvent,
     GameOverEvent,
     GameStartEvent,
     JoinedLobbyEvent,
@@ -29,6 +30,7 @@ import { Player } from "./Player";
 
 export class Game extends EventSystem {
     players: Player[] = [];
+    spectators: ClientConnection[] = [];
     activePlayer: number = -1;
     startingPlayerCount: number = 0;
     topCard: Card = new Card("w", new CardColor("c"));
@@ -70,6 +72,13 @@ export class Game extends EventSystem {
 
     resetDrawAmount() {
         this.drawAmount = 1;
+    }
+
+    addSpectator(connection: ClientConnection) {
+        this.spectators.push(connection);
+        connection.registerEvent<DisconnectedEvent>("DisconnectedEvent", () => {
+            this.spectators = this.spectators.filter((spectator) => spectator != connection);
+        });
     }
 
     join(username: string, connection: ClientConnection) {
@@ -274,6 +283,10 @@ export class Game extends EventSystem {
     broadcastEvent(event: BaseEvent) {
         this.players.forEach((player) => {
             player.connection.send(event);
+        });
+
+        this.spectators.forEach((spectator) => {
+            spectator.send(event);
         });
     }
 }
